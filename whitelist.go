@@ -69,8 +69,7 @@ func GetWhitelist() []string {
 func init() {
 	flag.Parse()
 	if *whitelistFileFlag == "" {
-		log.Printf("No whitelist specified for CORS [%s]. Cross-origin requests will have default behaviour.\n",
-			*whitelistFileFlag)
+		log.Println("No whitelist specified for CORS. Cross-origin requests will have default behaviour.")
 		whitelist = nil
 		return
 	}

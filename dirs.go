@@ -59,9 +59,9 @@ func ListFilesHandler(w http.ResponseWriter, r *http.Request) {
 func init() {
 	flag.Parse()
 	if *baseFlag == "" {
-		log.Fatalf("-base is required [%s]\n", *baseFlag)
+		log.Fatalln("-base is required")
 	}
 	if !strings.HasPrefix(*baseFlag, "/") {
-		log.Fatalln("-base must be absolute")
+		log.Fatalln("-base must be absolute [%s]\n", *baseFlag)
 	}
 }

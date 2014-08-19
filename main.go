@@ -19,11 +19,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	ListFilesHandler(w, r)
 }
 
+func init() {
+	http.HandleFunc("/", handler)
+}
+
 func main() {
 	flag.Parse()
 	if *addrFlag == "" {
-		log.Fatalf("-addr is required [%s]\n", *addrFlag)
+		log.Fatalln("-addr is required")
 	}
-	http.HandleFunc("/", handler)
 	http.ListenAndServe(*addrFlag, nil)
 }
