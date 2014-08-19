@@ -38,18 +38,14 @@ func readWhitelistFile(name string) error {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
+		if strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") || strings.TrimSpace(line) == "" {
 			continue
 		}
 		newlist.PushBack(line)
+		log.Printf("[CORS] Whitelisted '%s'\n", line)
 	}
 	whitelist.Init()
 	whitelist.PushBackList(newlist)
-	for e := whitelist.Front(); e != nil; e = e.Next() {
-		if origin, ok := e.Value.(string); ok {
-			log.Printf("Adding %s to whitelist", origin)
-		}
-	}
 	return nil
 }
 
@@ -59,7 +55,7 @@ func GetWhitelist() []string {
 	}
 	w := make([]string, whitelist.Len())
 	for e := whitelist.Front(); e != nil; e = e.Next() {
-		if origin, ok := e.Value.(string); ok {
+		if origin, ok := e.Value.(string); ok && origin != "" {
 			w = append(w, origin)
 		}
 	}
