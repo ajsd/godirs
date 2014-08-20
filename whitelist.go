@@ -3,14 +3,21 @@ package main
 import (
 	"bufio"
 	"container/list"
+	"errors"
 	"flag"
 	"log"
 	"os"
 	"strings"
 )
 
+const (
+	noWhitelistError = "No whitelist specified for CORS. Cross-origin requests will have default behaviour."
+)
+
+// Global (see #init())
 var whitelist *list.List
 
+// Flags
 var (
 	whitelistFileFlag = flag.String("cors-whitelist", "", "File containing allowed CORS origins")
 )
@@ -62,10 +69,17 @@ func GetWhitelist() []string {
 	return w
 }
 
+func ReloadWhitelist() error {
+	if *whitelistFileFlag == "" {
+		return errors.New(noWhitelistError)
+	}
+	return readWhitelistFile(*whitelistFileFlag)
+}
+
 func init() {
 	flag.Parse()
 	if *whitelistFileFlag == "" {
-		log.Println("No whitelist specified for CORS. Cross-origin requests will have default behaviour.")
+		log.Println(noWhitelistError)
 		whitelist = nil
 		return
 	}

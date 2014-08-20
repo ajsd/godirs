@@ -10,6 +10,10 @@ var (
 	addrFlag = flag.String("addr", "", "Address to use. [host]:port.")
 )
 
+func reloadHandler(w http.ResponseWriter, r *http.Request) {
+	ReloadWhitelist()
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 	origin := r.Header.Get("Origin")
 	if IsWhitelisted(origin) {
@@ -20,7 +24,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/rerere", reloadHandler)
+	http.HandleFunc(dirsPath, handler)
 }
 
 func main() {

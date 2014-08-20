@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+const (
+	dirsPath = "/p/"
+)
+
 var (
 	baseFlag = flag.String("base", "", "Absolute path to the base directory.")
 )
@@ -26,7 +30,7 @@ func skip(name string) bool {
 }
 
 func ListFilesHandler(w http.ResponseWriter, r *http.Request) {
-	p := path.Join(*baseFlag, r.URL.Path)
+	p := path.Join(*baseFlag, strings.TrimPrefix(r.URL.Path, dirsPath))
 	if !strings.HasPrefix(p, *baseFlag) {
 		http.Error(w, "Bad path", http.StatusForbidden)
 		return
