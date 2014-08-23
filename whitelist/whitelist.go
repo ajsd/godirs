@@ -20,8 +20,10 @@ type whitelist struct {
 
 func (w *whitelist) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	origin := r.Header.Get("Origin")
+	log.Printf("Checking origin [%s]\n", origin)
 	if w.IsWhitelisted(origin) {
 		rw.Header().Set("Access-Control-Allow-Origin", origin)
+		log.Printf("Origin [%s] allowed\n", origin)
 	}
 }
 
@@ -44,7 +46,7 @@ func (w *whitelist) set(origins []string) {
 	w.whitelist.Init()
 	for _, origin := range origins {
 		w.whitelist.PushBack(origin)
-		log.Printf("[CORS] Whitelisted '%s'\n", origin)
+		log.Printf("Whitelisted '%s'\n", origin)
 	}
 }
 
@@ -83,5 +85,5 @@ func NewFromFile(name string) (Whitelist, error) {
 }
 
 func init() {
-	log.SetPrefix("[Whitelist]")
+	log.SetPrefix("[CORS] ")
 }

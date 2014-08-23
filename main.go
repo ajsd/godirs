@@ -14,6 +14,7 @@ var (
 )
 
 func main() {
+	log.SetPrefix("[godirs] ")
 	flag.Parse()
 	if *addrFlag == "" {
 		log.Fatalln("-addr is required")
@@ -25,7 +26,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Error loading whitelist file: %v\n", err)
 		}
-		m.Use(w)
+		m.Use(w.ServeHTTP)
 	} else {
 		log.Printf("No CORS whitelist specificied (-cors-whitelist-file). Cross-domain requests will have default behaviour")
 	}
