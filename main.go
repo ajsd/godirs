@@ -21,12 +21,16 @@ func main() {
 	m := martini.Classic()
 
 	if *whitelistFileFlag != "" {
-		m.Use(whitelist.NewFromFile(*whitelistFileFlag))
+		w, err := whitelist.NewFromFile(*whitelistFileFlag)
+		if err != nil {
+			log.Fatalf("Error loading whitelist file: %v\n", err)
+		}
+		m.Use(w)
 	} else {
 		log.Printf("No CORS whitelist specificied (-cors-whitelist-file). Cross-domain requests will have default behaviour")
 	}
 
-	m.Get(dirPath, ListFilesHandler)
+	m.Get(dirsPath, ListFilesHandler)
 
 	m.RunOnAddr(*addrFlag)
 }
