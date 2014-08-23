@@ -1,32 +1,35 @@
-package main
+package whitelist
 
 import (
 	"bufio"
 	"container/list"
-	"errors"
-	"flag"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 )
 
-const (
-	noWhitelistError = "No whitelist specified for CORS. Cross-origin requests will have default behaviour."
-)
+type Whitelist interface {
+	http.Handler
+	IsWhitelisted(origin string) bool
+}
 
-// Global (see #init())
-var whitelist *list.List
+type whitelist struct {
+	whitelist *list.List
+}
 
-// Flags
-var (
-	whitelistFileFlag = flag.String("cors-whitelist", "", "File containing allowed CORS origins")
-)
+func (w *whitelist) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	origin := r.Header.Get("Origin")
+	if w.IsWhitelisted(origin) {
+		rw.Header().Set("Access-Control-Allow-Origin", origin)
+	}
+}
 
-func IsWhitelisted(origin string) bool {
-	if whitelist == nil {
+func (w *whitelist) IsWhitelisted(origin string) bool {
+	if w.whitelist == nil {
 		return false
 	}
-	for e := whitelist.Front(); e != nil; e = e.Next() {
+	for e := w.whitelist.Front(); e != nil; e = e.Next() {
 		if e.Value == origin {
 			return true
 		}
@@ -34,55 +37,51 @@ func IsWhitelisted(origin string) bool {
 	return false
 }
 
-func readWhitelistFile(name string) error {
+func (w *whitelist) set(origins []string) {
+	if w.whitelist == nil {
+		w.whitelist = list.New()
+	}
+	w.whitelist.Init()
+	for _, origin := range origins {
+		w.whitelist.PushBack(origin)
+		log.Printf("[CORS] Whitelisted '%s'\n", origin)
+	}
+}
+
+func (w *whitelist) loadFromFile(name string) error {
 	file, err := os.Open(name)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	newlist := list.New()
+	var origins []string
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") || strings.TrimSpace(line) == "" {
 			continue
 		}
-		newlist.PushBack(line)
-		log.Printf("[CORS] Whitelisted '%s'\n", line)
+		origins = append(origins, line)
 	}
-	whitelist.Init()
-	whitelist.PushBackList(newlist)
+	w.set(origins)
 	return nil
 }
 
-func GetWhitelist() []string {
-	if whitelist == nil {
-		return nil
-	}
-	w := make([]string, whitelist.Len())
-	for e := whitelist.Front(); e != nil; e = e.Next() {
-		if origin, ok := e.Value.(string); ok && origin != "" {
-			w = append(w, origin)
-		}
-	}
+func New(origins []string) Whitelist {
+	w := &whitelist{whitelist: list.New()}
+	w.set(origins)
 	return w
 }
 
-func ReloadWhitelist() error {
-	if *whitelistFileFlag == "" {
-		return errors.New(noWhitelistError)
+func NewFromFile(name string) (Whitelist, error) {
+	w := &whitelist{whitelist: list.New()}
+	if err := w.loadFromFile(name); err != nil {
+		return nil, err
 	}
-	return readWhitelistFile(*whitelistFileFlag)
+	return w, nil
 }
 
 func init() {
-	flag.Parse()
-	if *whitelistFileFlag == "" {
-		log.Println(noWhitelistError)
-		whitelist = nil
-		return
-	}
-	whitelist = list.New()
-	readWhitelistFile(*whitelistFileFlag)
+	log.SetPrefix("[Whitelist]")
 }
