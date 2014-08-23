@@ -13,14 +13,20 @@ var (
 	whitelistFileFlag = flag.String("cors-whitelist-file", "", "CORS whitelisted origins file (one origin per line).")
 )
 
-func main() {
-	log.SetPrefix("[godirs] ")
-	flag.Parse()
-	if *addrFlag == "" {
-		log.Fatalln("-addr is required")
-	}
-	m := martini.Classic()
+var m *martini.Martini
 
+func init() {
+	m = martini.New()
+	m.Use(martini.Recovery())
+	m.Use(martini.Logger())
+
+	r := martini.NewRouter()
+	r.Get(dirsPath, ListFiles)
+
+	m.Action(r.Handle)
+}
+
+func initWhitelist() {
 	if *whitelistFileFlag != "" {
 		w, err := whitelist.NewFromFile(*whitelistFileFlag)
 		if err != nil {
@@ -30,8 +36,14 @@ func main() {
 	} else {
 		log.Printf("No CORS whitelist specificied (-cors-whitelist-file). Cross-domain requests will have default behaviour")
 	}
+}
 
-	m.Get(dirsPath, ListFilesHandler)
-
+func main() {
+	log.SetPrefix("[godirs] ")
+	flag.Parse()
+	if *addrFlag == "" {
+		log.Fatalln("-addr is required")
+	}
+	initWhitelist()
 	m.RunOnAddr(*addrFlag)
 }

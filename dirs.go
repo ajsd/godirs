@@ -8,10 +8,12 @@ import (
 	"net/http"
 	"path"
 	"strings"
+
+	"github.com/go-martini/martini"
 )
 
 const (
-	dirsPath = "/p/"
+	dirsPath = "/p/**"
 )
 
 var (
@@ -29,35 +31,34 @@ func skip(name string) bool {
 	return strings.HasPrefix(name, ".")
 }
 
-func ListFilesHandler(w http.ResponseWriter, r *http.Request) {
-	p := path.Join(*baseFlag, strings.TrimPrefix(r.URL.Path, dirsPath))
-	if !strings.HasPrefix(p, *baseFlag) {
-		http.Error(w, "Bad path", http.StatusForbidden)
-		return
+func ListFiles(params martini.Params) (int, string) {
+	p := params["_1"]
+	dir := path.Join(*baseFlag, p)
+	if !strings.HasPrefix(dir, *baseFlag) {
+		return http.StatusForbidden, "Bad path"
 	}
-	infos, err := ioutil.ReadDir(p)
+	infos, err := ioutil.ReadDir(dir)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return http.StatusInternalServerError, err.Error()
 	}
-	var ret []FileInfo
+	var ret []*FileInfo
 	for _, info := range infos {
 		if skip(info.Name()) {
 			continue
 		}
-		finfo := FileInfo{
+		finfo := &FileInfo{
 			IsDir: info.IsDir(),
 			Name:  info.Name(),
-			Path:  path.Join(r.URL.Path, info.Name()),
+			Path:  path.Join(p, info.Name()),
 			Size:  info.Size(),
 		}
 		ret = append(ret, finfo)
 	}
-	if err := json.NewEncoder(w).Encode(ret); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	data, err := json.Marshal(ret)
+	if err != nil {
+		return http.StatusInternalServerError, err.Error()
 	}
+	return http.StatusOK, string(data)
 }
 
 func init() {
