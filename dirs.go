@@ -49,7 +49,7 @@ func ListFiles(params martini.Params) (int, string) {
 		finfo := &FileInfo{
 			IsDir: info.IsDir(),
 			Name:  info.Name(),
-			Path:  path.Join(p, info.Name()),
+			Path:  path.Join("/", p, info.Name()),
 			Size:  info.Size(),
 		}
 		ret = append(ret, finfo)
