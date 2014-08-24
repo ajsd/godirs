@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"log"
+	"os"
+	"strings"
 
-	"github.com/ajsd/godirs/whitelist"
 	"github.com/go-martini/martini"
+	"github.com/martini-contrib/cors"
 )
 
 var (
@@ -27,15 +30,29 @@ func init() {
 }
 
 func initWhitelist() {
-	if *whitelistFileFlag != "" {
-		w, err := whitelist.NewFromFile(*whitelistFileFlag)
-		if err != nil {
-			log.Fatalf("Error loading whitelist file: %v\n", err)
-		}
-		m.Use(w.ServeHTTP)
-	} else {
+	if *whitelistFileFlag == "" {
 		log.Printf("No CORS whitelist specificied (-cors-whitelist-file). Cross-domain requests will have default behaviour")
+		return
 	}
+	file, err := os.Open(*whitelistFileFlag)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	var origins []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") || strings.TrimSpace(line) == "" {
+			continue
+		}
+		origins = append(origins, line)
+	}
+	m.Use(cors.Allow(&cors.Options{
+		AllowOrigins:     origins,
+		AllowCredentials: true,
+	}))
 }
 
 func main() {
