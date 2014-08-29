@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 
@@ -47,7 +48,7 @@ func ListFiles(params martini.Params) (int, string) {
 			continue
 		}
 		finfo := &FileInfo{
-			IsDir: info.IsDir(),
+			IsDir: info.IsDir() || (info.Mode()|os.ModeType != 0),
 			Name:  info.Name(),
 			Path:  path.Join("/", p, info.Name()),
 			Size:  info.Size(),
