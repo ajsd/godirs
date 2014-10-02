@@ -33,7 +33,8 @@ func init() {
 
 func initWhitelist() {
 	if *whitelistFileFlag == "" && *whitelistFlag == "" {
-		log.Printf("No CORS whitelist specificied (-cors-whitelist, -cors-whitelist-file). Cross-domain requests will have default behaviour")
+		log.Printf(`No CORS whitelist specificied (-cors-whitelist, -cors-whitelist-file).
+								Cross-domain requests will have default behaviour`)
 		return
 	}
 	var origins []string
