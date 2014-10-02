@@ -46,8 +46,8 @@ func initWhitelist() {
 
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
-			line := scanner.Text()
-			if strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") || strings.TrimSpace(line) == "" {
+			line := strings.TrimSpace(scanner.Text())
+			if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
 				continue
 			}
 			origins = append(origins, line)
