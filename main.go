@@ -13,8 +13,8 @@ import (
 
 var (
 	addrFlag          = flag.String("addr", "", "Address to use. [host]:port.")
-	whitelistFlag     = flag.String("cors-whitelist", "", "CORS whitelisted origins (comma-separated)")
-	whitelistFileFlag = flag.String("cors-whitelist-file", "", "CORS whitelisted origins file (one origin per line).")
+	whitelistFlag     = flag.String("cors", "", "CORS whitelisted origins (comma-separated)")
+	whitelistFileFlag = flag.String("cors-file", "", "CORS whitelisted origins file (one origin per line).")
 )
 
 var m *martini.Martini
@@ -33,8 +33,9 @@ func init() {
 
 func initWhitelist() {
 	if *whitelistFileFlag == "" && *whitelistFlag == "" {
-		log.Printf(`No CORS whitelist specificied (-cors-whitelist, -cors-whitelist-file).
-								Cross-domain requests will have default behaviour`)
+		log.Printf("%s %s",
+			"No CORS whitelist specificied (-cors, -cors-file).",
+			"Cross-domain requests will have default behaviour")
 		return
 	}
 	var origins []string
