@@ -53,8 +53,10 @@ func initWhitelist() {
 			origins = append(origins, line)
 		}
 	}
-	for _, origin := range strings.Split(*whitelistFlag, ",") {
-		origins = append(origins, origin)
+	if *whitelistFlag != "" {
+		for _, origin := range strings.Split(*whitelistFlag, ",") {
+			origins = append(origins, origin)
+		}
 	}
 	log.Printf("CORS allowed origins: [%s]", strings.Join(origins, ","))
 	m.Use(cors.Allow(&cors.Options{
